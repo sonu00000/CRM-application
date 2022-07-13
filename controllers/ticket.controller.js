@@ -1,6 +1,7 @@
 const Ticket = require("../models/ticket.model");
 const User = require("../models/user.model");
 const { userTypes, userStatuses } = require("../utils/constants");
+const triggerNotificationService = require("../utils/notificationServiceClient");
 
 /**
  * Create ticket
@@ -18,6 +19,8 @@ const createTicket = async (req, res) => {
       userType: userTypes.engineer,
       userStatus: userStatuses.approved,
     });
+
+    //console.log(engUser);
 
     if (engUser) {
       ticketObj.assignedTo = engUser.userId;
@@ -42,6 +45,23 @@ const createTicket = async (req, res) => {
       engUser.ticketsAssigned.push(ticket._id);
       await engUser.save();
     }
+
+    //get all the admin user that we need to send email notifications to
+    //const allAdmins = await User.find({ userType: userTypes.admin });
+
+    /**
+     * Call the notificationservice to send the email
+     *
+     * Use client to call the external service
+     */
+    //subject,ticketId,content,recipientEmails,requestor
+    triggerNotificationService(
+      `New Ticket created`,
+      ticket._id,
+      ticket.description,
+      `${user.email}, ${engUser.email}`,
+      user.email
+    );
 
     return res.status(201).json({ success: true, ticket });
   } catch (error) {
@@ -164,6 +184,16 @@ const updateTicket = async (req, res) => {
     }
 
     const updatedTicket = await ticket.save();
+
+    //FIX THE COMMENTED TODO BELOW
+
+    // triggerNotificationService(
+    //   `New Ticket created`,
+    //   ticket._id,
+    //   ticket.description,
+    //   `${user.email}, ${engUser.email}`,
+    //   user.email
+    // );
 
     return res.status(200).json({ success: true, ticket: updatedTicket });
   } catch (error) {

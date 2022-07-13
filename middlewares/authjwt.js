@@ -41,7 +41,7 @@ const verifyToken = (req, res, next) => {
 };
 
 /**
- * Check if the passed acc toke is of admin or not
+ * Check if the passed access token is of admin or not
  */
 
 const isAdmin = async (req, res, next) => {
